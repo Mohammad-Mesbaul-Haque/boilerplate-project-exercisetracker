@@ -155,7 +155,7 @@ app.get('/api/users/:_id/logs', (req, res)=>{
         }
       }
 if (err) {
-  console.log(`Error happened in ${req.path} request`);
+  console.log(`Error happened in ${req.path} request err: ${err}`);
 } else {
   ExerciseInfo.find((query), null, {limit: limitChecker(+limit)}, (err, doc)=>{
     let loggedArray = [];
@@ -168,7 +168,7 @@ if (err) {
         return {
           "description": item.description,
           "duration": item.duration,
-          "log": item.date.toDateString()
+          "date": item.date.toDateString()
         }
       })
 
@@ -195,6 +195,18 @@ if (err) {
   })
 }
     }) 
+})
+
+
+//  Get all users endpoint
+app.get('/api/users', (req, res)=>{
+  UserInfo.find({},(err, data)=>{
+    if (err) {
+      res.send('No users found')
+    }else{
+      res.json(data)
+    }
+  })
 })
 
 const listener = app.listen(process.env.PORT || 3000, () => {
