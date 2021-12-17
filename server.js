@@ -80,7 +80,50 @@ app.get('/', (req, res) => {
    })
  })
 
+// exercise  post endpoint
+app.post('/api/users/:_id/exercises', (req, res)=>{
+  let idJson = {"id": req.params._id};
+  let checkedDate = new Date(req.body.date);
+  let idToCheck = idJson.id;
 
+  let noDateHandler = ()=>{
+    if (checkedDate instanceof Date && !isNaN(checkedDate)) {
+      return checkedDate;
+    }else{
+      return checkedDate = new Date();
+    }
+  }
+
+  UserInfo.findById(idToCheck, (err, data)=>{
+    noDateHandler(checkedDate)
+    if (err) {
+        console.log('Error with id', err); 
+      } else {
+         const test = new ExerciseInfo({
+           "username": data.username,
+           "description": req.body.description,
+           "duration": req.body.duration,
+           "date": checkedDate.toDateString()
+         })
+         
+         test.save((err, data)=>{
+           if (err) {
+             console.log("error saving exercise", err);
+           }else{
+             console.log("Saved exercise successfully");
+             res.json({
+               "_id": idToCheck,
+               "username": data.username,
+               "description": data.description,
+               "duration": data.duration,
+               "date": data.date.toDateString()
+             })
+           }
+         })
+     }
+  })
+
+})
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
