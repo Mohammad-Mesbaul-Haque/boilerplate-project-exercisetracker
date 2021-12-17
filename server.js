@@ -105,7 +105,7 @@ app.post('/api/users/:_id/exercises', (req, res)=>{
            "duration": req.body.duration,
            "date": checkedDate.toDateString()
          })
-         
+
          test.save((err, data)=>{
            if (err) {
              console.log("error saving exercise", err);
@@ -123,6 +123,78 @@ app.post('/api/users/:_id/exercises', (req, res)=>{
      }
   })
 
+})
+
+// Logs endpoint
+app.get('/api/users/:_id/logs', (req, res)=>{
+  // grab all the query params
+  const {from, to, limit} = req.query;
+   let idJson = {"id": req.params._id}
+    let idToCheck = idJson.id
+
+    // Check id and process
+    UserInfo.findById(idToCheck, (err, data)=>{
+      let query = {
+        username: data.username,
+      }
+// Configuring from , to  query
+      if(from !== undefined && to === undefined){
+        query.date = { $gte : new Date(from)}
+      } else if (to !== undefined && from === undefined){
+        query.date = { $lte : new Date(to)}
+      } else if(from !== undefined && to !== undefined) {
+        query.date = { $gte: new Date(from), $lte: new Date(to)}
+      }
+
+      let limitChecker = (limit)=>{
+        let maxLimit = 100;
+        if (limit) {
+          return limit; 
+        } else {
+          return maxLimit; 
+        }
+      }
+if (err) {
+  console.log(`Error happened in ${req.path} request`);
+} else {
+  ExerciseInfo.find((query), null, {limit: limitChecker(+limit)}, (err, doc)=>{
+    let loggedArray = [];
+    if (err) {
+      console.log(`Error ${err}`);
+    } else {
+// two data parameter conflicting so parameter name changed to doc here.
+      let document = doc;
+      loggedArray = document.map((item)=>{
+        return {
+          "description": item.description,
+          "duration": item.duration,
+          "log": item.date.toDateString()
+        }
+      })
+
+      const test  = new logInfo({
+        "username": data.username,
+        "count": loggedArray.length,
+        "log": loggedArray
+      })
+      test.save((err, data)=>{
+        if (err) {
+          console.log(`error: ${err} in path: ${req.path}`);
+        } else{
+          console.log(`saved exercise successfully!`);
+          res.json({
+            "_id": idToCheck,
+            "username": data.username,
+            "count": data.count,
+            "log": loggedArray
+          })
+        }
+      })
+
+    }  
+  })
+}
+    }) 
 })
 
 const listener = app.listen(process.env.PORT || 3000, () => {
